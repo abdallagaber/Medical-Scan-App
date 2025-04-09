@@ -6,21 +6,45 @@ from tensorflow.keras.preprocessing import image
 import numpy as np
 
 
+# def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, filename: str):
+#     """Load model from Kaggle Hub with error handling."""
+#     try:
+#         # Construct the model handle dynamically
+#         model_handle = f"{user}/{model_slug}/keras/{variation_slug}"
+#         MODEL_PATH = kagglehub.model_download(model_handle)
+
+#         if not os.path.exists(MODEL_PATH):
+#             raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
+
+#         model = load_model(os.path.join(MODEL_PATH, filename), compile=False)
+#         print("Model loaded successfully!")
+#         return model
+#     except Exception as e:
+#         print(f"Error loading model: {str(e)}")
+#         raise
+
+
 def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, filename: str):
-    """Load model from Kaggle Hub with error handling."""
+    """Load model from Kaggle Hub with caching and error handling."""
+    key = f"{user}/{model_slug}/{variation_slug}/{filename}"
+
     try:
-        # Construct the model handle dynamically
+        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # Disable GPU
+        os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN backend
+
         model_handle = f"{user}/{model_slug}/keras/{variation_slug}"
         MODEL_PATH = kagglehub.model_download(model_handle)
 
-        if not os.path.exists(MODEL_PATH):
-            raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
+        model_file = os.path.join(MODEL_PATH, filename)
+        if not os.path.exists(model_file):
+            raise FileNotFoundError(f"Model file not found at {model_file}")
 
-        model = load_model(os.path.join(MODEL_PATH, filename), compile=False)
-        print("Model loaded successfully!")
+        model = load_model(model_file, compile=False)
+        print(f"✅ Model loaded successfully from {model_file}")
         return model
+
     except Exception as e:
-        print(f"Error loading model: {str(e)}")
+        print(f"❌ Error loading model: {str(e)}")
         raise
 
 

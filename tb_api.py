@@ -39,7 +39,8 @@ async def startup_event():
         logger.info("Model initialized successfully!")
     except Exception as e:
         logger.error(f"Error during startup: {str(e)}")
-        raise
+        raise HTTPException(
+            status_code=500, detail="Model initialization failed")
 
 # Define class labels
 CLASS_LABELS = {0: "Normal", 1: "Tuberculosis"}
