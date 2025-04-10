@@ -40,12 +40,33 @@ def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, file
             raise FileNotFoundError(f"Model file not found at {model_file}")
 
         model = load_model(model_file, compile=False)
-        print(f"✅ Model loaded successfully from {model_file}")
+        print(f"Model loaded successfully from {model_file}")
         return model
 
     except Exception as e:
-        print(f"❌ Error loading model: {str(e)}")
+        print(f"Error loading model: {str(e)}")
         raise
+
+
+class ModelSingleton:
+    _brain_instance = None
+    _tb_instance = None
+
+    @classmethod
+    def get_brain_model(cls):
+        if cls._brain_instance is None:
+            cls._brain_instance = load_model_from_kaggle(
+                "khalednabawi", "brain-tumor-resnet", "v2", "resnet_brain_model.h5"
+            )
+        return cls._brain_instance
+
+    @classmethod
+    def get_tb_model(cls):
+        if cls._tb_instance is None:
+            cls._tb_instance = load_model_from_kaggle(
+                "khalednabawi", "tb-chest-prediction", "v1", "tb_resnet.h5"
+            )
+        return cls._tb_instance
 
 
 def preprocess_image(img):

@@ -1,13 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from tensorflow.keras.models import load_model
-from tensorflow.keras.applications.resnet50 import preprocess_input
-from tensorflow.keras.preprocessing import image
 import numpy as np
 from io import BytesIO
 from PIL import Image
 import logging
 import os
-from utils import load_model_from_kaggle, preprocess_image
+from utils import ModelSingleton, preprocess_image
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,11 +29,9 @@ async def startup_event():
     """Initialize model on startup"""
     global model
     try:
-        logger.info("Starting model initialization...")
-        model = load_model_from_kaggle(
-            "khalednabawi", "tb-chest-prediction", "v1", "tb_resnet.h5"
-        )
-        logger.info("Model initialized successfully!")
+        logger.info("Starting TB model initialization...")
+        model = ModelSingleton.get_tb_model()
+        logger.info("TB model initialized successfully!")
     except Exception as e:
         logger.error(f"Error during startup: {str(e)}")
         raise HTTPException(

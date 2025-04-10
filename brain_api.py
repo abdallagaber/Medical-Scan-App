@@ -1,12 +1,9 @@
-import os
-# import cv2 as cv
-import numpy as np
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from tensorflow.keras.models import load_model
-from utils import load_model_from_kaggle, preprocess_image
+from utils import preprocess_image
 import logging
 from io import BytesIO
 from PIL import Image
+from utils import ModelSingleton
 
 # Initialize router
 router = APIRouter()
@@ -31,11 +28,9 @@ async def startup_event():
     """Initialize model on startup"""
     global model
     try:
-        logger.info("Starting model initialization...")
-        model = load_model_from_kaggle(
-            "khalednabawi", "brain-tumor-resnet", "v2", "resnet_brain_model.h5"
-        )
-        logger.info("Model initialized successfully!")
+        logger.info("Starting brain model initialization...")
+        model = ModelSingleton.get_brain_model()
+        logger.info("Brain model initialized successfully!")
     except Exception as e:
         logger.error(f"Error during startup: {str(e)}")
         raise HTTPException(

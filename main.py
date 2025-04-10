@@ -12,6 +12,14 @@ import tensorflow as tf
 from fastapi import FastAPI, UploadFile, File
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+# Disable tensorflow logging
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
 
 # Initialize FastAPI app
 app = FastAPI(title="Medical Analysis API")
