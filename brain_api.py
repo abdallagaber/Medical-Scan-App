@@ -3,7 +3,7 @@ from utils import preprocess_image
 import logging
 from io import BytesIO
 from PIL import Image
-from utils import ModelSingleton
+from utils import load_model_from_kaggle
 
 # Initialize router
 router = APIRouter()
@@ -29,7 +29,8 @@ async def startup_event():
     global model
     try:
         logger.info("Starting brain model initialization...")
-        model = ModelSingleton.get_brain_model()
+        model = model = load_model_from_kaggle(
+            "khalednabawi", 'brain-tumor-resnet', "v2", 'resnet_brain_model.h5')
         logger.info("Brain model initialized successfully!")
     except Exception as e:
         logger.error(f"Error during startup: {str(e)}")

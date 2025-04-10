@@ -1,16 +1,12 @@
-# Disable GPU and force TensorFlow to use CPU
-from tb_api import router as tb_router
-from brain_api import router as brain_router
 import logging
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-import os
-from PIL import Image
-from io import BytesIO
-import tensorflow as tf
+from brain_api import router as brain_router
+from tb_api import router as tb_router
 from fastapi import FastAPI, UploadFile, File
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 # Configure logging
 logging.basicConfig(

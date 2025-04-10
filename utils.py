@@ -4,6 +4,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.resnet50 import preprocess_input
 from tensorflow.keras.preprocessing import image
 import numpy as np
+from tensorflow.keras import backend as K
 
 
 # def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, filename: str):
@@ -32,6 +33,7 @@ def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, file
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # Disable GPU
         os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN backend
 
+        K.clear_session()
         model_handle = f"{user}/{model_slug}/keras/{variation_slug}"
         MODEL_PATH = kagglehub.model_download(model_handle)
 
@@ -46,27 +48,6 @@ def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, file
     except Exception as e:
         print(f"Error loading model: {str(e)}")
         raise
-
-
-class ModelSingleton:
-    _brain_instance = None
-    _tb_instance = None
-
-    @classmethod
-    def get_brain_model(cls):
-        if cls._brain_instance is None:
-            cls._brain_instance = load_model_from_kaggle(
-                "khalednabawi", "brain-tumor-resnet", "v2", "resnet_brain_model.h5"
-            )
-        return cls._brain_instance
-
-    @classmethod
-    def get_tb_model(cls):
-        if cls._tb_instance is None:
-            cls._tb_instance = load_model_from_kaggle(
-                "khalednabawi", "tb-chest-prediction", "v1", "tb_resnet.h5"
-            )
-        return cls._tb_instance
 
 
 def preprocess_image(img):
