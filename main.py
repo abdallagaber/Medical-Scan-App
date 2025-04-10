@@ -27,7 +27,7 @@ async def root():
 
 
 # Include the TB Detection API router with a specific path
-app.include_router(tb_router, prefix="/Tuberculosis",
-                   tags=["TB Detection"])
 app.include_router(brain_router, prefix="/Brain-Tumor",
                    tags=["Brain Tumor Detection"])
+app.include_router(tb_router, prefix="/Tuberculosis",
+                   tags=["TB Detection"])
