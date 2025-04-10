@@ -1,62 +1,89 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from utils import preprocess_image
+from utils import preprocess_image, load_model_from_kaggle
 import logging
 from io import BytesIO
 from PIL import Image
-from utils import load_model_from_kaggle
-
-# Initialize router
-router = APIRouter()
-
-
-@router.get("/")
-async def root():
-    return {"status": "healthy", "message": "Brain Tumor Detection API is running"}
-
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Initialize router
+router = APIRouter()
+
 # Global model variable
 model = None
-class_indices = {'Brain Tumor': 0, 'Healthy': 1}
+CLASS_LABELS = {0: "Brain Tumor", 1: "Healthy"}
 
 
 @router.on_event("startup")
 async def startup_event():
-    """Initialize model on startup"""
+    """Initialize model on startup with error handling"""
     global model
     try:
         logger.info("Starting brain model initialization...")
-        model = model = load_model_from_kaggle(
-            "khalednabawi", 'brain-tumor-resnet', "v2", 'resnet_brain_model.h5')
+        # Disable GPU and set memory growth
+        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+        os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+        model = load_model_from_kaggle(
+            "khalednabawi",
+            'brain-tumor-resnet',
+            "v2",
+            'resnet_brain_model.h5'
+        )
         logger.info("Brain model initialized successfully!")
     except Exception as e:
         logger.error(f"Error during startup: {str(e)}")
         raise HTTPException(
-            status_code=500, detail="Model initialization failed")
+            status_code=500,
+            detail=f"Model initialization failed: {str(e)}"
+        )
+
+
+@router.get("/")
+async def root():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "message": "Brain Tumor Detection API is running"
+    }
 
 
 @router.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    """Receives an image file, preprocesses it, and returns brain tumor classification."""
+    """
+    Endpoint to predict brain tumor from uploaded image
+    Args:
+        file: Uploaded image file
+    Returns:
+        dict: Prediction results including class and confidence
+    """
     try:
         logger.info(f"Receiving prediction request for file: {file.filename}")
+
+        # Validate image file
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=400,
+                detail="File must be an image"
+            )
+
+        # Read and preprocess image
         contents = await file.read()
-        img = Image.open(BytesIO(contents)).convert("RGB")  # Ensure RGB format
+        img = Image.open(BytesIO(contents)).convert("RGB")
         img_array = preprocess_image(img)
 
         if model is None:
             raise ValueError("Model not initialized")
 
         # Make prediction
-        prediction = model.predict(img_array)
-        # Convert sigmoid output to 0 or 1
+        prediction = model.predict(img_array, verbose=0)
         predicted_class = int(prediction[0][0] > 0.5)
-        confidence = float(prediction[0][0])  # Confidence score
+        confidence = float(prediction[0][0])
 
-        result = "Brain Tumor" if predicted_class == 0 else "Healthy"
+        result = CLASS_LABELS[predicted_class]
         logger.info(f"Prediction complete: {result}")
 
         return {
@@ -65,7 +92,12 @@ async def predict(file: UploadFile = File(...)):
             "prediction": result,
             "confidence": confidence,
         }
+
+    except HTTPException as he:
+        raise he
     except Exception as e:
         logger.error(f"Error during prediction: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Prediction failed: {str(e)}")
+            status_code=500,
+            detail=f"Prediction failed: {str(e)}"
+        )
