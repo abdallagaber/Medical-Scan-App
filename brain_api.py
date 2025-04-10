@@ -1,9 +1,9 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from utils import preprocess_image, load_model_from_kaggle
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
+from utils import preprocess_image
 import logging
 from io import BytesIO
 from PIL import Image
-import os
+from utils import load_model_from_kaggle
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -12,34 +12,8 @@ logger = logging.getLogger(__name__)
 # Initialize router
 router = APIRouter()
 
-# Global model variable
-model = None
+# Class labels for predictions
 CLASS_LABELS = {0: "Brain Tumor", 1: "Healthy"}
-
-
-@router.on_event("startup")
-async def startup_event():
-    """Initialize model on startup with error handling"""
-    global model
-    try:
-        logger.info("Starting brain model initialization...")
-        # Disable GPU and set memory growth
-        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-        os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-
-        model = load_model_from_kaggle(
-            "khalednabawi",
-            'brain-tumor-resnet',
-            "v2",
-            'resnet_brain_model.h5'
-        )
-        logger.info("Brain model initialized successfully!")
-    except Exception as e:
-        logger.error(f"Error during startup: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Model initialization failed: {str(e)}"
-        )
 
 
 @router.get("/")
@@ -51,17 +25,39 @@ async def root():
     }
 
 
+# @router.on_event("startup")
+# async def startup_event():
+#     """Initialize model on startup"""
+#     try:
+#         logger.info("Starting brain model initialization...")
+#         brain_model = load_model_from_kaggle(
+#             "khalednabawi", 'brain-tumor-resnet', "v2", 'tb_resnet.h5')
+#         logger.info("Brain model initialized successfully!")
+#         # Store model in app state
+#         router.app.state.brain_model = brain_model
+#     except Exception as e:
+#         logger.error(f"Error during startup: {str(e)}")
+#         raise HTTPException(
+#             status_code=500, detail="Model initialization failed")
+
+
 @router.post("/predict")
-async def predict(file: UploadFile = File(...)):
+async def predict(request: Request, file: UploadFile = File(...)):
     """
     Endpoint to predict brain tumor from uploaded image
     Args:
         file: Uploaded image file
+        request: FastAPI request object to access app state
     Returns:
         dict: Prediction results including class and confidence
     """
     try:
         logger.info(f"Receiving prediction request for file: {file.filename}")
+
+        # Get model from app state
+        model = request.app.state.brain_model
+        if model is None:
+            raise ValueError("Brain tumor model not initialized")
 
         # Validate image file
         if not file.content_type.startswith("image/"):
@@ -74,9 +70,6 @@ async def predict(file: UploadFile = File(...)):
         contents = await file.read()
         img = Image.open(BytesIO(contents)).convert("RGB")
         img_array = preprocess_image(img)
-
-        if model is None:
-            raise ValueError("Model not initialized")
 
         # Make prediction
         prediction = model.predict(img_array, verbose=0)
