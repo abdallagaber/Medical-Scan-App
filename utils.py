@@ -7,24 +7,6 @@ import numpy as np
 from tensorflow.keras import backend as K
 
 
-# def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, filename: str):
-#     """Load model from Kaggle Hub with error handling."""
-#     try:
-#         # Construct the model handle dynamically
-#         model_handle = f"{user}/{model_slug}/keras/{variation_slug}"
-#         MODEL_PATH = kagglehub.model_download(model_handle)
-
-#         if not os.path.exists(MODEL_PATH):
-#             raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
-
-#         model = load_model(os.path.join(MODEL_PATH, filename), compile=False)
-#         print("Model loaded successfully!")
-#         return model
-#     except Exception as e:
-#         print(f"Error loading model: {str(e)}")
-#         raise
-
-
 def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, filename: str):
     """Load model from Kaggle Hub with caching and error handling."""
     key = f"{user}/{model_slug}/{variation_slug}/{filename}"

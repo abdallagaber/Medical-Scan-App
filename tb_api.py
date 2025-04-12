@@ -64,8 +64,8 @@ async def predict(request: Request, file: UploadFile = File(...)):
         logger.info(f"Receiving prediction request for file: {file.filename}")
 
         # Get model from app state
-        model = request.app.state.tb_model
-        if model is None:
+        tb_model = request.app.state.tb_model
+        if tb_model is None:
             raise ValueError("TB model not initialized")
 
         # Validate image file
@@ -81,7 +81,7 @@ async def predict(request: Request, file: UploadFile = File(...)):
         img_array = preprocess_image(img)
 
         # Make prediction
-        prediction = model.predict(img_array, verbose=0)
+        prediction = tb_model.predict(img_array, verbose=0)
         predicted_class = int(prediction[0][0] > 0.5)
         confidence = float(prediction[0][0])
 

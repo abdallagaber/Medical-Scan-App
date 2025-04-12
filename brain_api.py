@@ -55,8 +55,8 @@ async def predict(request: Request, file: UploadFile = File(...)):
         logger.info(f"Receiving prediction request for file: {file.filename}")
 
         # Get model from app state
-        model = request.app.state.brain_model
-        if model is None:
+        brain_model = request.app.state.brain_model
+        if brain_model is None:
             raise ValueError("Brain tumor model not initialized")
 
         # Validate image file
@@ -72,7 +72,7 @@ async def predict(request: Request, file: UploadFile = File(...)):
         img_array = preprocess_image(img)
 
         # Make prediction
-        prediction = model.predict(img_array, verbose=0)
+        prediction = brain_model.predict(img_array, verbose=0)
         predicted_class = int(prediction[0][0] > 0.5)
         confidence = float(prediction[0][0])
 
