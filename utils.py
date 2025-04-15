@@ -7,7 +7,7 @@ import numpy as np
 from tensorflow.keras import backend as K
 
 
-def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, filename: str):
+def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, filename: str, framework: str = "keras"):
     """Load model from Kaggle Hub with caching and error handling."""
     key = f"{user}/{model_slug}/{variation_slug}/{filename}"
 
@@ -16,7 +16,7 @@ def load_model_from_kaggle(user: str, model_slug: str, variation_slug: str, file
         os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN backend
 
         K.clear_session()
-        model_handle = f"{user}/{model_slug}/keras/{variation_slug}"
+        model_handle = f"{user}/{model_slug}/{framework}/{variation_slug}"
         MODEL_PATH = kagglehub.model_download(model_handle)
 
         model_file = os.path.join(MODEL_PATH, filename)

@@ -1,9 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Request
 from utils import preprocess_image
 import logging
+import json
 from io import BytesIO
 from PIL import Image
-from utils import load_model_from_kaggle
+from similarity import check_similarity
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -68,6 +69,21 @@ async def predict(request: Request, file: UploadFile = File(...)):
 
         # Read and preprocess image
         contents = await file.read()
+
+        # Parse similarity check response
+        similar = check_similarity(contents)
+        similarity_data = similar.body.decode()  # Convert bytes to string
+        similarity_result = json.loads(similarity_data)  # Parse JSON string
+
+        if similarity_result.get("prediction") == "not-medical":
+            raise HTTPException(
+                status_code=400,
+                detail="File is not a valid medical image"
+            )
+
+        # Add logging for debugging
+        logger.info(f"Similarity check result: {similarity_data}")
+
         img = Image.open(BytesIO(contents)).convert("RGB")
         img_array = preprocess_image(img)
 

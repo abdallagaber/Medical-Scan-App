@@ -14,7 +14,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install tensorflow==2.18.0
-RUN pip install pillow
+RUN pip install pillow===njfds
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app code
