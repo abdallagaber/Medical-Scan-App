@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from utils import load_model_from_kaggle
 
 model = load_model_from_kaggle(
-    'aliamrali', 'medical_scan_checker', 'v1', 'medical_scan_checker.h5'
+    'aliamrali', 'medical_scan_checker', 'v2', 'medical_scan_checker.h5'
 )
 
 
@@ -35,7 +35,7 @@ def check_similarity(file):
 
     result = "medical" if prediction[0] > 0.5 else "not-medical"
 
-    if result == "medical" and confidence > 0.9:
+    if result == "medical" and confidence >= 0.95:
         return JSONResponse(content={
             "prediction": result,
             "confidence": float(confidence)
