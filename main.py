@@ -29,6 +29,16 @@ logging.getLogger('tensorflow').setLevel(logging.ERROR)
 # Initialize FastAPI app
 app = FastAPI(title="Medical Analysis API")
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change this in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 
 @app.on_event("startup")
 async def startup_event():
