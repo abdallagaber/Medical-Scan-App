@@ -5,7 +5,6 @@ from io import BytesIO
 import tensorflow as tf
 import numpy as np
 import json
-from similarity import check_similarity
 
 from utils import preprocess_image
 # Configure logging
@@ -54,19 +53,6 @@ async def predict(request: Request, file: UploadFile = File(...)):
 
         # Read and preprocess image
         contents = await file.read()
-        # Parse similarity check response
-        similar = check_similarity(contents)
-        similarity_data = similar.body.decode()  # Convert bytes to string
-        similarity_result = json.loads(similarity_data)  # Parse JSON string
-
-        if similarity_result.get("prediction") == "not-medical":
-            raise HTTPException(
-                status_code=400,
-                detail="File is not a valid medical image"
-            )
-
-        # Add logging for debugging
-        logger.info(f"Similarity check result: {similarity_data}")
 
         img_bytes = BytesIO(contents)
 
